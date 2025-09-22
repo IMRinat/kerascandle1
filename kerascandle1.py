@@ -102,28 +102,34 @@ print(y.describe())
 def build_model(hp):
     model = Sequential()
     model.add(Dense(
-        hp.Int('units_input', min_value=64, max_value=256, step=32),
-        activation=hp.Choice('activation_input', ['relu', 'tanh']),
-        input_shape=(input_dim,)
-    ))
-    model.add(BatchNormalization())
-    model.add(Dropout(hp.Float('dropout_input', 0.1, 0.5, step=0.1)))
-    
-    for i in range(hp.Int('num_layers', 1, 4)):
-        model.add(Dense(
-            hp.Int(f'units_{i}', min_value=32, max_value=256, step=32),
-            activation=hp.Choice(f'activation_{i}', ['relu', 'tanh'])
+            hp.Int('units_input', min_value=64, max_value=512, step=64),
+            activation=hp.Choice('activation_input', ['relu', 'tanh']),
+            input_shape=(input_dim,),
+            kernel_regularizer=tf.keras.regularizers.l2(hp.Float('l2_input', 0.0, 0.01, step=0.001))
         ))
-        model.add(BatchNormalization())
-        model.add(Dropout(hp.Float(f'dropout_{i}', 0.1, 0.5, step=0.1)))
-    
+    if hp.Boolean('batchnorm_input'):
+            model.add(BatchNormalization())
+    if hp.Boolean('dropout_input'):
+        model.add(Dropout(hp.Float('dropout_input_rate', 0.0, 0.3, step=0.05)))
+
+    for i in range(hp.Int('num_layers', 1, 5)):
+            model.add(Dense(
+                hp.Int(f'units_{i}', min_value=32, max_value=256, step=32),
+                activation=hp.Choice(f'activation_{i}', ['relu', 'tanh']),
+                kernel_regularizer=tf.keras.regularizers.l2(hp.Float(f'l2_{i}', 0.0, 0.01, step=0.001))
+            ))
+            if hp.Boolean(f'batchnorm_{i}'):
+                model.add(BatchNormalization())
+            if hp.Boolean(f'dropout_{i}'):
+                model.add(Dropout(hp.Float(f'dropout_{i}_rate', 0.0, 0.3, step=0.05)))
+
     model.add(Dense(2, activation='linear'))  # два выхода
-    
+
     model.compile(
-        optimizer=Adam(hp.Choice('learning_rate', [1e-2, 5e-3, 1e-3, 5e-4, 1e-4])),
-        loss='mse',
-        metrics=['mae']
-    )
+            optimizer=Adam(hp.Choice('learning_rate', [1e-2, 5e-3, 1e-3, 5e-4, 1e-4])),
+            loss='mse',
+            metrics=['mae']
+        )
     return model
 
 tuner = RandomSearch(
@@ -166,14 +172,16 @@ print(y_val)
 print("Предсказанные значения (y_pred):")
 print(y_pred)
 
-#print("Предсказанные значения (y_pred2):")
-#print(y_pred2)
+print("Предсказанные значения (y_pred2):")
+print(y_pred2)
 
 print("Train Loss (last epoch):", history.history['loss'][-1])
 print("Val Loss (last epoch):", history.history['val_loss'][-1])
 
 print("Среднее y_val:", y_val.mean())
 print("Среднее y_pred:", y_pred.mean(axis=0))
+print("Среднее y_pred2:", y_pred2.mean(axis=0))
 
 print("Стандартное отклонение y_val:", y_val.std())
 print("Стандартное отклонение y_pred:", y_pred.std(axis=0))
+print("Стандартное отклонение y_pred2:", y_pred2.std(axis=0))
