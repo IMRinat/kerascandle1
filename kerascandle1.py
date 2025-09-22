@@ -32,14 +32,21 @@ X_train, X_val, y_train, y_val = train_test_split(
 input_dim = X_train.shape[1]
 
 model = Sequential([
-    Dense(256, activation='relu', input_shape=(input_dim,)),
-    Dense(128, activation='tanh'),
-    Dense(128, activation='relu'),
-    Dense(64, activation='tanh'),
+    Dense(128, activation='relu', input_shape=(input_dim,)),
+    BatchNormalization(),
+    Dropout(0.2),
+
     Dense(64, activation='relu'),
-    Dense(32, activation='tanh'),
+    BatchNormalization(),
+    Dropout(0.2),
+
+    Dense(32, activation='relu'),
+    BatchNormalization(),
+    Dropout(0.1),
+
     Dense(2, activation='linear')  # два выхода: maxh и minh
 ])
+
 
 model.compile(
     optimizer=Adam(learning_rate=0.001),
@@ -56,7 +63,7 @@ early_stop = EarlyStopping(
 history = model.fit(
     X_train, y_train,
     validation_data=(X_val, y_val),
-    epochs=200,
+    epochs=100,
     batch_size=32,
     callbacks=[early_stop]
 )
@@ -148,8 +155,6 @@ best_model.summary()
 best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
 print(best_hps.values)
 
-for layer in best_model.layers:
-    print(layer.get_config())
 
 loss, mae = best_model.evaluate(X_val, y_val)
 print("Loss:", loss)
