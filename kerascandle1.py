@@ -158,3 +158,28 @@ print("MAE:", mae)
 loss, mae = model.evaluate(X_val, y_val)
 print("Loss:", loss)
 print("MAE:", mae)
+
+# Предсказания модели
+y_pred = model.predict(X_val)
+
+# Предсказания модели тюнера
+y_pred2 = best_model.predict(X_val)
+
+# Вывод настоящих и предсказанных значений
+print("Настоящие значения (y_val):")
+print(y_val)
+
+print("Предсказанные значения (y_pred):")
+print(y_pred)
+
+print("Предсказанные значения (y_pred2):")
+print(y_pred2)
+
+print("Train Loss (last epoch):", history.history['loss'][-1])
+print("Val Loss (last epoch):", history.history['val_loss'][-1])
+
+print("Среднее y_val:", y_val.mean())
+print("Среднее y_pred:", y_pred.mean(axis=0))
+
+print("Стандартное отклонение y_val:", y_val.std())
+print("Стандартное отклонение y_pred:", y_pred.std(axis=0))
