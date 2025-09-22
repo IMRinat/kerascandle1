@@ -104,3 +104,40 @@ print(y_pred)
 
 print(y.describe())
 
+
+def build_model(hp):
+    model = Sequential()
+    model.add(Dense(
+        hp.Int('units_input', min_value=64, max_value=256, step=32),
+        activation='relu',
+        input_shape=(input_dim,)
+    ))
+    model.add(Dropout(hp.Float('dropout_input', 0.1, 0.5, step=0.1)))
+    
+    for i in range(hp.Int('num_layers', 1, 3)):
+        model.add(Dense(
+            hp.Int(f'units_{i}', min_value=32, max_value=128, step=32),
+            activation='relu'
+        ))
+        model.add(Dropout(hp.Float(f'dropout_{i}', 0.1, 0.5, step=0.1)))
+    
+    model.add(Dense(1, activation='linear'))
+    
+    model.compile(
+        optimizer=Adam(hp.Choice('learning_rate', [1e-2, 1e-3, 1e-4])),
+        loss='mse',
+        metrics=['mae']
+    )
+    return model
+
+tuner = RandomSearch(
+    build_model,
+    objective='val_loss',
+    max_trials=10,
+    executions_per_trial=1,
+    directory='tuner_logs',
+    project_name='regression_tuning'
+)
+
+tuner.search(X_train, y_train, validation_data=(X_val, y_val), epochs=50, callbacks=[early_stop])
+best_model = tuner.get_best_models(num_models=1)[0]
