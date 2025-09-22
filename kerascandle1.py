@@ -109,22 +109,24 @@ def build_model(hp):
     model = Sequential()
     model.add(Dense(
         hp.Int('units_input', min_value=64, max_value=256, step=32),
-        activation='relu',
+        activation=hp.Choice('activation_input', ['relu', 'tanh']),
         input_shape=(input_dim,)
     ))
+    model.add(BatchNormalization())
     model.add(Dropout(hp.Float('dropout_input', 0.1, 0.5, step=0.1)))
     
-    for i in range(hp.Int('num_layers', 1, 3)):
+    for i in range(hp.Int('num_layers', 1, 4)):
         model.add(Dense(
-            hp.Int(f'units_{i}', min_value=32, max_value=128, step=32),
-            activation='relu'
+            hp.Int(f'units_{i}', min_value=32, max_value=256, step=32),
+            activation=hp.Choice(f'activation_{i}', ['relu', 'tanh'])
         ))
+        model.add(BatchNormalization())
         model.add(Dropout(hp.Float(f'dropout_{i}', 0.1, 0.5, step=0.1)))
     
-    model.add(Dense(1, activation='linear'))
+    model.add(Dense(2, activation='linear'))  # два выхода
     
     model.compile(
-        optimizer=Adam(hp.Choice('learning_rate', [1e-2, 1e-3, 1e-4])),
+        optimizer=Adam(hp.Choice('learning_rate', [1e-2, 5e-3, 1e-3, 5e-4, 1e-4])),
         loss='mse',
         metrics=['mae']
     )
@@ -133,11 +135,26 @@ def build_model(hp):
 tuner = RandomSearch(
     build_model,
     objective='val_loss',
-    max_trials=10,
+    max_trials=30,
     executions_per_trial=1,
     directory='tuner_logs',
     project_name='regression_tuning'
 )
 
-tuner.search(X_train, y_train, validation_data=(X_val, y_val), epochs=50, callbacks=[early_stop])
+tuner.search(X_train, y_train, validation_data=(X_val, y_val), epochs=100, callbacks=[early_stop])
 best_model = tuner.get_best_models(num_models=1)[0]
+best_model.summary()
+
+best_hps = tuner.get_best_hyperparameters(num_trials=1)[0]
+print(best_hps.values)
+
+for layer in best_model.layers:
+    print(layer.get_config())
+
+loss, mae = best_model.evaluate(X_val, y_val)
+print("Loss:", loss)
+print("MAE:", mae)
+
+loss, mae = model.evaluate(X_val, y_val)
+print("Loss:", loss)
+print("MAE:", mae)
