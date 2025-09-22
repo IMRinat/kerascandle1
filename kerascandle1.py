@@ -10,6 +10,9 @@ from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
+import matplotlib.pyplot as plt
+from keras_tuner import RandomSearch
+
 datacsv = pd.read_csv(config.TESTAKC, sep=';', decimal=',')
 
 x = datacsv.drop(['mh','ml'], axis=1)
@@ -65,4 +68,39 @@ history = model.fit(
 )
 
 model.summary()
+
+# График потерь
+plt.figure(figsize=(12, 5))
+
+plt.subplot(1, 2, 1)
+plt.plot(history.history['loss'], label='Train Loss')
+plt.plot(history.history['val_loss'], label='Val Loss')
+plt.title('Loss over epochs')
+plt.xlabel('Epoch')
+plt.ylabel('MSE Loss')
+plt.legend()
+
+# График MAE
+plt.subplot(1, 2, 2)
+plt.plot(history.history['mae'], label='Train MAE')
+plt.plot(history.history['val_mae'], label='Val MAE')
+plt.title('MAE over epochs')
+plt.xlabel('Epoch')
+plt.ylabel('Mean Absolute Error')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+# Предсказания модели
+y_pred = model.predict(X_val)
+
+# Вывод настоящих и предсказанных значений
+print("Настоящие значения (y_val):")
+print(y_val)
+
+print("Предсказанные значения (y_pred):")
+print(y_pred)
+
+print(y.describe())
 
