@@ -32,17 +32,14 @@ X_train, X_val, y_train, y_val = train_test_split(
 input_dim = X_train.shape[1]
 
 model = Sequential([
-    Dense(128, activation='relu', input_shape=(input_dim,)),
-    BatchNormalization(),
-    Dropout(0.2),
+    Dense(256, activation='relu', input_shape=(input_dim,)),
+    Dropout(0.05),
+
+    Dense(128, activation='relu'),
+    Dropout(0.05),
 
     Dense(64, activation='relu'),
-    BatchNormalization(),
-    Dropout(0.2),
-
-    Dense(32, activation='relu'),
-    BatchNormalization(),
-    Dropout(0.1),
+    Dropout(0.05),
 
     Dense(2, activation='linear')  # два выхода: maxh и minh
 ])
@@ -62,7 +59,7 @@ early_stop = EarlyStopping(
 history = model.fit(
     X_train, y_train,
     validation_data=(X_val, y_val),
-    epochs=100,
+    epochs=200,
     batch_size=32,
     callbacks=[early_stop]
 )
@@ -172,8 +169,8 @@ print(y_val)
 print("Предсказанные значения (y_pred):")
 print(y_pred)
 
-print("Предсказанные значения (y_pred2):")
-print(y_pred2)
+#print("Предсказанные значения (y_pred2):")
+#print(y_pred2)
 
 print("Train Loss (last epoch):", history.history['loss'][-1])
 print("Val Loss (last epoch):", history.history['val_loss'][-1])
