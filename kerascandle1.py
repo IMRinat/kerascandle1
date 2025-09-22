@@ -33,14 +33,11 @@ input_dim = X_train.shape[1]
 
 model = Sequential([
     Dense(256, activation='relu', input_shape=(input_dim,)),
-    Dropout(0.05),
-
+    Dense(128, activation='tanh'),
     Dense(128, activation='relu'),
-    Dropout(0.05),
-
+    Dense(64, activation='tanh'),
     Dense(64, activation='relu'),
-    Dropout(0.05),
-
+    Dense(32, activation='tanh'),
     Dense(2, activation='linear')  # два выхода: maxh и minh
 ])
 
